@@ -9,16 +9,43 @@
 //using namespace std::chrono;
 //
 //
-//const int matrixSize = 1000;//dimension
-//double augmentedmatrix[matrixSize][2 * matrixSize];    
+//const int matrixSize = 1000;
+//double A[matrixSize][2 * matrixSize];    
 //
 //
-//int i, j, k, temp;     /* declaring counter variables for loops */
+//
 //
 //using namespace std;
 //
 //
+////Funkcija za popunjavanje
+//void matrixRead(){
+//	
+//	int row, col;
+//	
+//	srand(3333);
+//	for (row = 0; row < matrixSize; row++){
+//		for (col = 0; col < 2 * matrixSize; col++){
+//			if (col < matrixSize){
+//				
+//				A[row][col]= rand() % 10;
+//			}
+//			else
+//			{
+//				if (row == col%matrixSize)
+//					A[row][col] = 1;
+//				else
+//					A[row][col] = 0;
 //
+//			}
+//		}
+//		
+//	}
+//
+//}
+//
+//
+////Funkcije za ispis
 //void printInverseMatrix() {
 //
 //	int row, col;
@@ -26,13 +53,15 @@
 //	{
 //		for (col = matrixSize; col < 2*matrixSize; col++)
 //		{
-//			cout << augmentedmatrix[row][col] << " ";
+//			cout << A[row][col] << " ";
 //		}
 //
 //		cout << endl;
 //
 //	}
 //}
+//
+//
 //
 //void printMatrix() {
 //
@@ -41,7 +70,7 @@
 //	{
 //		for (col = 0; col <  matrixSize; col++)
 //		{
-//			cout << augmentedmatrix[row][col] << " ";
+//			cout << A[row][col] << " ";
 //		}
 //
 //		cout << endl;
@@ -56,7 +85,7 @@
 //	{
 //		for (col = 0; col <2* matrixSize; col++)
 //		{
-//			cout << augmentedmatrix[row][col] << " ";
+//			cout << A[row][col] << " ";
 //		}
 //
 //		cout << endl;
@@ -65,44 +94,23 @@
 //}
 //
 //
-//void matrixRead(){
-//	
-//	int row, col;
-//	
-//	srand(3333);
-//	for (row = 0; row < matrixSize; row++){
-//		for (col = 0; col < 2 * matrixSize; col++){
-//			if (col < matrixSize){
-//				
-//				augmentedmatrix[row][col]= rand() % 10;
-//			}
-//			else
-//			{
-//				if (row == col%matrixSize)
-//					augmentedmatrix[row][col] = 1;
-//				else
-//					augmentedmatrix[row][col] = 0;
-//
-//			}
-//		}
-//		
-//	}
-//
-//}
 //
 //
 //void calculateInverse(){
-//	double temporary, r;
 //
-//	for (j = 0; j<matrixSize; j++)
+//
+//	int temp;
+//	double temp1, r;
+//
+//	for (int j = 0; j<matrixSize; j++)
 //	{
 //
 //		temp = j;
 //
 //		/* finding maximum jth column element in last (dimension-j) rows */
 //
-//		for (i = j + 1; i<matrixSize; i++)
-//		if (augmentedmatrix[i][j]>augmentedmatrix[temp][j])
+//		for (int i = j + 1; i<matrixSize; i++)
+//		if (A[i][j]>A[temp][j])
 //			temp = i;
 //
 //		
@@ -110,26 +118,26 @@
 //		/* swapping row which has maximum jth column element */
 //
 //		if (temp != j)
-//		for (k = 0; k<2 * matrixSize; k++){
-//			temporary = augmentedmatrix[j][k];
-//			augmentedmatrix[j][k] = augmentedmatrix[temp][k];
-//			augmentedmatrix[temp][k] = temporary;
+//		for (int k = 0; k<2 * matrixSize; k++){
+//			temp1 = A[j][k];
+//			A[j][k] = A[temp][k];
+//			A[temp][k] = temp1;
 //		}
 //
 //		/* performing row operations to form required identity matrix out of the input matrix */
 //
-//		for (i = 0; i<matrixSize; i++)
+//		for (int i = 0; i<matrixSize; i++)
 //		if (i != j)
 //		{
-//			r = augmentedmatrix[i][j];
-//			for (k = 0; k<2 * matrixSize; k++)
-//				augmentedmatrix[i][k] -= (augmentedmatrix[j][k] / augmentedmatrix[j][j])*r;
+//			r = A[i][j];
+//			for (int k = 0; k<2 * matrixSize; k++)
+//				A[i][k] -= (A[j][k] / A[j][j])*r;
 //		}
 //		else
 //		{
-//			r = augmentedmatrix[i][j];
-//			for (k = 0; k<2 * matrixSize; k++)
-//				augmentedmatrix[i][k] /= r;
+//			r = A[i][j];
+//			for (int k = 0; k<2 * matrixSize; k++)
+//				A[i][k] /= r;
 //		}
 //
 //	}
@@ -146,7 +154,7 @@
 //		{
 //			if (row == col)
 //			{
-//				if (augmentedmatrix[row][col] != 1)
+//				if (A[row][col] != 1)
 //				{
 //					
 //					flag = false;
@@ -155,7 +163,7 @@
 //
 //			else
 //			{
-//				if (augmentedmatrix[row][col] != 0)
+//				if (A[row][col] != 0)
 //				{
 //					
 //					flag = false;
@@ -172,18 +180,17 @@
 //int main(){
 //	
 //	
-//	/*   storing augmented matrix as a matrix of dimension
-//	(dimension)x(2*dimension) in 2D array  */
+//	//Uèitavanja matrice
 //	matrixRead();
 //
 //	
 //
 //
 //
-//	
+//	//Pokretanje timera
 //	auto start = high_resolution_clock::now();
 //
-//	/* using gauss-jordan elimination */
+//	//Raèunanje inverza
 //	calculateInverse();
 //
 //	
@@ -197,6 +204,7 @@
 //
 //
 //	//printMatrix();
+//	
 //	//Provjera toènosti
 //	if (isValid())
 //	{

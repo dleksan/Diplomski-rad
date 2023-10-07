@@ -15,11 +15,13 @@
 
 using namespace std;
 
-#define BLOCK_SIZE 8
+#define BLOCK_SIZE 16
 
-const int n = 100;
+const int n = 512;
 
-/*storing matrix*/
+
+
+//Popunjavanje matrice
 void initializeMatrix(double* L, int matrixSize) {
 	int row, col;
 	
@@ -50,6 +52,7 @@ void initializeIdentityMatrix(double* I, int matrixSize)
 
 
 
+//Funkcije za računanje inverza
 __global__ void nodiag_normalize(double* A, double* I, int n, int i) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -61,6 +64,9 @@ __global__ void nodiag_normalize(double* A, double* I, int n, int i) {
 		}
 
 }
+
+
+
 
 __global__ void diag_normalize(double* A, double* I, int n, int i) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -105,6 +111,7 @@ __global__ void set_zero(double* A, double* I, int n, int i) {
 
 
 
+//Funkcije za ispis
 void printMatrix(double* L, int matrixSize) {
 
 	int row, col;
@@ -213,28 +220,29 @@ int main()
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
-	int ddsize = n * n * sizeof(double);
+
+	int allocationSize = n * n * sizeof(double);
 
 	dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 numBlocks((n + BLOCK_SIZE - 1) / BLOCK_SIZE, (n + BLOCK_SIZE - 1) / BLOCK_SIZE);
 
-	// memory allocation    
-	cudaMalloc((void**)&d_A, ddsize);
+	// alokacija memorije    
+	cudaMalloc((void**)&d_A, allocationSize);
 	
-	cudaMalloc((void**)&d_I, ddsize);
+	cudaMalloc((void**)&d_I, allocationSize);
 	
 	I = new double[n * n];
 
 
 	initializeIdentityMatrix(I, n);
 	
-	//timer start
+	//Pokretanje timera
 	cudaEventRecord(start, 0);
 
-	//copy data from CPU to GPU
-	cudaMemcpy(d_A, L, ddsize, cudaMemcpyHostToDevice);
+	//kopiranje s hosta na device
+	cudaMemcpy(d_A, L, allocationSize, cudaMemcpyHostToDevice);
 	
-    cudaMemcpy(d_I, I, ddsize, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_I, I, allocationSize, cudaMemcpyHostToDevice);
 	
 
 
@@ -246,10 +254,11 @@ int main()
 		set_zero << <numBlocks, threadsPerBlock >> > (d_A, d_I, n, i);
 	}
 
-	//copy data from GPU to CPU
-	cudaMemcpy(iL, d_I, ddsize, cudaMemcpyDeviceToHost);
+
+	//kopiranje s devicea na hosta
+	cudaMemcpy(iL, d_I, allocationSize, cudaMemcpyDeviceToHost);
 	
-	cudaMemcpy(I, d_A, ddsize, cudaMemcpyDeviceToHost);
+	cudaMemcpy(I, d_A, allocationSize, cudaMemcpyDeviceToHost);
 	
 
 	cudaEventRecord(stop, 0);
@@ -261,8 +270,8 @@ int main()
 	cout << "Vrijeme: " << time << "ms\n";
 	
 	
-
-
+	//printMatrix(L, n);
+	//printInverse(iL,n);
 
 	/////////////////////////////////////////////////////////////////
 	///						Provjera tocnosti					  ///

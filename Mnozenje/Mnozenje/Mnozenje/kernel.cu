@@ -9,16 +9,19 @@
 using namespace std;
 
 #define BLOCK_SIZE 16
-const int matrixSize = 1000;
+const int matrixSize = 512;
 
 
 
+
+//Mnozenje matrica
 __global__ void gpu_matrix_mult(int* A, int* B, int* C, int matrixSize)
 {
 
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int sum = 0;
+
     if (col < matrixSize && row < matrixSize)
     {
         for (int i = 0; i < matrixSize; i++)
@@ -27,7 +30,7 @@ __global__ void gpu_matrix_mult(int* A, int* B, int* C, int matrixSize)
             sum += A[row * matrixSize + i] * B[i * matrixSize + col];
         }
 
-        //
+        
         C[row * matrixSize + col] = sum;
     }
 }
@@ -51,6 +54,7 @@ void cpu_matrix_mult(int* A, int* B, int* C, int matrixSize) {
 
 
 
+//Popunjavanje matrica
 void initializeMatrices(int matrixSize, int* A, int* B)
 {
     for (int i = 0; i < matrixSize; ++i) {
@@ -68,6 +72,8 @@ void initializeMatrices(int matrixSize, int* A, int* B)
 
 }
 
+
+//Provjera tocnosti
 bool isValid(int matrixSize, int* hC, int* dC)
 {
 
@@ -92,7 +98,12 @@ bool isValid(int matrixSize, int* hC, int* dC)
 int main(int argc, char const* argv[])
 {
 
-   
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                          GPU verzija                                                                    //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     int* hA, * hB, * hC, * hCC;
     
     cudaMallocHost((void**)&hA, sizeof(int) * matrixSize * matrixSize);
@@ -109,42 +120,42 @@ int main(int argc, char const* argv[])
     float GPU_time;
    
 
-    // Allocate memory space on the device 
+    // Alociranje memorije na GPU-u
     int* dA, * dB, * dC;
     cudaMalloc((void**)&dA, sizeof(int) * matrixSize * matrixSize);
     cudaMalloc((void**)&dB, sizeof(int) * matrixSize * matrixSize);
     cudaMalloc((void**)&dC, sizeof(int) * matrixSize * matrixSize);
 
 
-
+    //Pokretanje timera
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
     cudaEventRecord(start, 0);
-    // copy matrix A and B from host to device memory
+
+
+    //Kopiranje podataka na device
     cudaMemcpy(dA, hA, sizeof(int) * matrixSize * matrixSize, cudaMemcpyHostToDevice);
     cudaMemcpy(dB, hB, sizeof(int) * matrixSize * matrixSize, cudaMemcpyHostToDevice);
-
 
     unsigned int gridSize = (matrixSize + BLOCK_SIZE - 1) / BLOCK_SIZE;
     
     dim3 dimGrid(gridSize, gridSize);
     dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-
-    
+  
+    //Poziv CUDA funkcije
     gpu_matrix_mult << <dimGrid, dimBlock >> > (dA, dB, dC, matrixSize);
 
-    // Kopiranje s GPU na CPU
+
+    //Kopiranje podataka na host-a
     cudaMemcpy(hC, dC, sizeof(int) * matrixSize * matrixSize, cudaMemcpyDeviceToHost);
+
     cudaThreadSynchronize();
    
     cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
+    cudaEventSynchronize(stop);  
 
-    
-
-     //compute time elapse on GPU computing
     cudaEventElapsedTime(&GPU_time, start, stop);
     
     cout << "Vrijeme na GPU:" << GPU_time << "ms" << endl;
@@ -152,7 +163,7 @@ int main(int argc, char const* argv[])
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //                                          CPU version                                                                     //
+    //                                          CPU verzija                                                                    //
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     auto clock_start_CPU = std::chrono::system_clock::now();
@@ -161,7 +172,9 @@ int main(int argc, char const* argv[])
 
 
     auto clock_now_CPU = std::chrono::system_clock::now();
-    float CPU_time = float(std::chrono::duration_cast <std::chrono::milliseconds> (clock_now_CPU - clock_start_CPU).count());
+
+    float CPU_time = float(std::chrono::duration_cast 
+    <std::chrono::milliseconds> (clock_now_CPU - clock_start_CPU).count());
 
 
     std::cout << "Vrijeme na CPU: " << CPU_time << " ms \n";
@@ -181,7 +194,7 @@ int main(int argc, char const* argv[])
         
     }
 
-    // free memory
+    // oslobodi memoriju
     cudaFree(dA);
     cudaFree(dB);
     cudaFree(dC);
